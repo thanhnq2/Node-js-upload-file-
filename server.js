@@ -8,21 +8,27 @@ const multer = require('multer');
 const app = express();
 
 //CREATE EXPRESS APP
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.urlencoded({
+	extended: true
+}))
 // SET STORAGE
 var storage = multer.diskStorage({
 	destination: function (req, file, cb) {
 		cb(null, 'Uploads')
 	},
 	filename: function (req, file, cb) {
-		cb(null, file.originalname ) // + '-' + Date.now())
+		cb(null, file.originalname) // + '-' + Date.now())
 	}
 })
 
-var upload = multer({ storage: storage })
+var upload = multer({
+	storage: storage
+})
 
 app.get('/', function (req, res) {
-	res.json({ message: 'WELCOME' });
+	res.json({
+		message: 'WELCOME'
+	});
 });
 app.use(express.json())
 // upload file to server and store in DB
@@ -35,14 +41,13 @@ app.post('/uploadfile', upload.single('myFile'), (req, res, next) => {
 		FILE_PATH)
 		VALUES ('${file.path}')
 		RETURNING *;
-		`
-		, (err, result) => {
-			if (err) throw err;
-			console.log('saved to database')
-			return res.json(result.rows.id);
+		`, (err, result) => {
+		if (err) throw err;
+		console.log('saved to database')
+		return res.json(result.rows.id);
 
-			// res.redirect('/')
-		});
+		// res.redirect('/')
+	});
 
 })
 
@@ -53,7 +58,7 @@ app.use(function (req, res, next) {
 });
 //  get multi files
 app.get("/getfiles", function (req, res) {
-	
+
 	const text = 'SELECT * FROM public."FILE_STORAGE" where ID IN(SELECT UNNEST($1::int[]))'
 
 	// const { id } = request.body
@@ -71,13 +76,13 @@ app.get("/getfiles", function (req, res) {
 	// promise
 
 	client
-	.query(text,[a])
-	.then(res1 => {
-		console.log(res1.rows)
-		let result = res1.rows
-		return res.json(result)
-	})
-	.catch(e => console.error(e.stack))
+		.query(text, [a])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 
 });
 
@@ -86,7 +91,7 @@ app.post('/uploadfiles', upload.array('myFile', 10), (req, res) => {
 
 	const files = req.files
 	var a = []
-    
+
 	var paths = req.files.map(file => {
 		var b = []
 		b.push(file.path)
@@ -97,25 +102,25 @@ app.post('/uploadfiles', upload.array('myFile', 10), (req, res) => {
 	console.log(typeof (paths))
 
 
-		const text = 'INSERT INTO public."FILE_STORAGE"(FILE_PATH) SELECT * FROM UNNEST ($1::text[]) RETURNING *'
-		const values = paths
+	const text = 'INSERT INTO public."FILE_STORAGE"(FILE_PATH) SELECT * FROM UNNEST ($1::text[]) RETURNING *'
+	const values = paths
 
-		// promise
-		client
-			.query(text, [a])
-			.then(res1 => {
-				console.log(res1.rows)
-				let result = res1.rows
-				return res.json(result)
-			})
-			.catch(e => console.error(e.stack))
+	// promise
+	client
+		.query(text, [a])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 
-    
+
 })
 // PR attack file
 app.post('/pr_attach', (req, res) => {
 
-    const text = 'INSERT INTO public."PR_ATTACH"(pr_no, user_id) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'	
+	const text = 'INSERT INTO public."PR_ATTACH"(pr_no, user_id) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'
 	var a = []
 
 	var PR_NO = req.body.map(ID => {
@@ -129,73 +134,79 @@ app.post('/pr_attach', (req, res) => {
 	// promise
 
 	client
-	.query(text,[a])
-	.then(res1 => {
-		console.log(res1.rows)
-		let result = res1.rows
-		return res.json(result)
-	})
-	.catch(e => console.error(e.stack))
+		.query(text, [a])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 
 })
 
 // get pr attack file
 app.post('/pr_attach', (req, res) => {
 
-    const text = 'SELECT * FROM public."PR_ATTACH" where pr_no IN(SELECT UNNEST($1::text[]))'	
+	const text = 'SELECT * FROM public."PR_ATTACH" where pr_no IN(SELECT UNNEST($1::text[]))'
 	var a = []
-        var c = []
-		var ID = req.body.map(id => {
-			var b = []
-			b.push(id.PR_NO)
-			a.push(b)
-			b = []
-			b.push(id.USER_ID)
-			c.push(b)
-	
-		})
-		console.log(a)
-		console.log(c)
+	var c = []
+	var ID = req.body.map(id => {
+		var b = []
+		b.push(id.PR_NO)
+		a.push(b)
+		b = []
+		b.push(id.USER_ID)
+		c.push(b)
 
-		// promise
-		client
-			.query(text, [[a],[c]])
-			.then(res1 => {
-				console.log(res1.rows)
-				let result = res1.rows
-				return res.json(result)
-			})
-			.catch(e => console.error(e.stack))
+	})
+	console.log(a)
+	console.log(c)
+
+	// promise
+	client
+		.query(text, [
+			[a],
+			[c]
+		])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 
 })
 
 // company code master data
 app.post('/companycode', (req, res) => {
 
-		const text = 'INSERT INTO public."COMPANYCODE"(bukrs, butxt) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'	
-		var a = []
-        var c = []
-		var ID = req.body.map(id => {
-			var b = []
-			b.push(id.BUKRS)
-			a.push(b)
-			b = []
-			b.push(id.BUTXT)
-			c.push(b)
-	
-		})
-		console.log(a)
-		console.log(c)
+	const text = 'INSERT INTO public."COMPANYCODE"(bukrs, butxt) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'
+	var a = []
+	var c = []
+	var ID = req.body.map(id => {
+		var b = []
+		b.push(id.BUKRS)
+		a.push(b)
+		b = []
+		b.push(id.BUTXT)
+		c.push(b)
 
-		// promise
-		client
-			.query(text, [[a],[c]])
-			.then(res1 => {
-				console.log(res1.rows)
-				let result = res1.rows
-				return res.json(result)
-			})
-			.catch(e => console.error(e.stack))
+	})
+	console.log(a)
+	console.log(c)
+
+	// promise
+	client
+		.query(text, [
+			[a],
+			[c]
+		])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => res.json(e))
 
 })
 app.get('/companycode', (req, res) => {
@@ -217,19 +228,19 @@ app.get('/companycode', (req, res) => {
 	// promise
 
 	client
-	.query(text,[a])
-	.then(res1 => {
-		console.log(res1.rows)
-		let result = res1.rows
-		return res.json(result)
-	})
-	.catch(e => console.error(e.stack))
+		.query(text, [a])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 })
 
 // Plant master data
 app.post('/plant', (req, res) => {
 
-	const text = 'INSERT INTO public."PLANT"(werks, name1) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'	
+	const text = 'INSERT INTO public."PLANT"(werks, name1) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'
 	var a = []
 	var c = []
 	var ID = req.body.map(id => {
@@ -246,7 +257,10 @@ app.post('/plant', (req, res) => {
 
 	// promise
 	client
-		.query(text, [[a],[c]])
+		.query(text, [
+			[a],
+			[c]
+		])
 		.then(res1 => {
 			console.log(res1.rows)
 			let result = res1.rows
@@ -257,36 +271,36 @@ app.post('/plant', (req, res) => {
 })
 app.get('/plan', (req, res) => {
 
-const text = 'SELECT * FROM "PLANT" where werks IN(SELECT UNNEST($1::text[]))'
+	const text = 'SELECT * FROM "PLANT" where werks IN(SELECT UNNEST($1::text[]))'
 
-// const { id } = request.body
-console.log(req.body)
-var a = []
+	// const { id } = request.body
+	console.log(req.body)
+	var a = []
 
-var BUKRS = req.body.map(ID => {
-	var b = []
-	b.push(ID.WERKS)
-	a.push(b)
+	var BUKRS = req.body.map(ID => {
+		var b = []
+		b.push(ID.WERKS)
+		a.push(b)
 
-})
+	})
 
-console.log(a)
-// promise
+	console.log(a)
+	// promise
 
-client
-.query(text,[a])
-.then(res1 => {
-	console.log(res1.rows)
-	let result = res1.rows
-	return res.json(result)
-})
-.catch(e => console.error(e.stack))
+	client
+		.query(text, [a])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 })
 
 // Purchasing org master data
 app.post('/pur_org', (req, res) => {
 
-	const text = 'INSERT INTO public."PUR_ORG"(ekorg, ekotx) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'	
+	const text = 'INSERT INTO public."PUR_ORG"(ekorg, ekotx) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'
 	var a = []
 	var c = []
 	var ID = req.body.map(id => {
@@ -303,7 +317,10 @@ app.post('/pur_org', (req, res) => {
 
 	// promise
 	client
-		.query(text, [[a],[c]])
+		.query(text, [
+			[a],
+			[c]
+		])
 		.then(res1 => {
 			console.log(res1.rows)
 			let result = res1.rows
@@ -314,36 +331,36 @@ app.post('/pur_org', (req, res) => {
 })
 app.get('/pur_org', (req, res) => {
 
-const text = 'SELECT * FROM "PUR_ORG" where ekorg IN(SELECT UNNEST($1::text[]))'
+	const text = 'SELECT * FROM "PUR_ORG" where ekorg IN(SELECT UNNEST($1::text[]))'
 
-// const { id } = request.body
-console.log(req.body)
-var a = []
+	// const { id } = request.body
+	console.log(req.body)
+	var a = []
 
-var BUKRS = req.body.map(ID => {
-	var b = []
-	b.push(ID.EKORG)
-	a.push(b)
+	var BUKRS = req.body.map(ID => {
+		var b = []
+		b.push(ID.EKORG)
+		a.push(b)
 
-})
+	})
 
-console.log(a)
-// promise
+	console.log(a)
+	// promise
 
-client
-.query(text,[a])
-.then(res1 => {
-	console.log(res1.rows)
-	let result = res1.rows
-	return res.json(result)
-})
-.catch(e => console.error(e.stack))
+	client
+		.query(text, [a])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 })
 
 // Purchasing group master data
 app.post('/pur_group', (req, res) => {
 
-	const text = 'INSERT INTO public."PUR_GROUP"(ekgrp, eknam) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'	
+	const text = 'INSERT INTO public."PUR_GROUP"(ekgrp, eknam) SELECT * FROM UNNEST ($1::text[], $2::text[]) RETURNING *'
 	var a = []
 	var c = []
 	var ID = req.body.map(id => {
@@ -360,7 +377,10 @@ app.post('/pur_group', (req, res) => {
 
 	// promise
 	client
-		.query(text, [[a],[c]])
+		.query(text, [
+			[a],
+			[c]
+		])
 		.then(res1 => {
 			console.log(res1.rows)
 			let result = res1.rows
@@ -371,33 +391,89 @@ app.post('/pur_group', (req, res) => {
 })
 app.get('/pur_group', (req, res) => {
 
-const text = 'SELECT * FROM "PUR_GROUP" where ekorg IN(SELECT UNNEST($1::text[]))'
+	const text = 'SELECT * FROM "PUR_GROUP" where ekorg IN(SELECT UNNEST($1::text[]))'
 
-// const { id } = request.body
-console.log(req.body)
-var a = []
+	// const { id } = request.body
+	console.log(req.body)
+	var a = []
 
-var BUKRS = req.body.map(ID => {
-	var b = []
-	b.push(ID.EKGRP)
-	a.push(b)
+	var BUKRS = req.body.map(ID => {
+		var b = []
+		b.push(ID.EKGRP)
+		a.push(b)
+
+	})
+
+	console.log(a)
+	// promise
+
+	client
+		.query(text, [a])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
+})
+
+app.post('/material', (req, res) => {
+
+	const text = `INSERT INTO public."MATERIAL"(MATNR, MTART,MATKL,MEINS,MAKTX,MAKTG) SELECT * FROM UNNEST 
+	
+    ($1::text[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[]) 
+	
+	RETURNING *`
+	var MATNR = []
+	var MTART = []
+	var MATKL = []
+	var MEINS = []
+	var MAKTX = []
+	var MAKTG = []
+	var ID = req.body.map(id => {
+		var b = []
+		b.push(id.MATNR)
+		MATNR.push(b)
+		b = []
+		b.push(id.MTART)
+		MTART.push(b)
+		b = []
+		b.push(id.MATKL)
+		MATKL.push(b)
+		b = []
+		b.push(id.MEINS)
+		MEINS.push(b)
+		b = []
+		b.push(id.MAKTX)
+		MAKTX.push(b)
+		b = []
+		b.push(id.MAKTG)
+		MAKTG.push(b)
+
+	})
+
+	// promise
+	client
+		.query(text, [
+			[MATNR],
+			[MTART],
+			[MATKL],
+			[MEINS],
+			[MAKTX],
+			[MAKTG]
+		])
+		.then(res1 => {
+			console.log(res1.rows)
+			let result = res1.rows
+			return res.json(result)
+		})
+		.catch(e => console.error(e.stack))
 
 })
 
-console.log(a)
-// promise
-
-client
-.query(text,[a])
-.then(res1 => {
-	console.log(res1.rows)
-	let result = res1.rows
-	return res.json(result)
-})
-.catch(e => console.error(e.stack))
-})
-
-const { Client } = require('pg');
+const {
+	Client
+} = require('pg');
 
 const client = new Client({
 	user: 'postgres',
@@ -413,68 +489,77 @@ client.connect((err, client) => {
 	 CREATE TABLE IF NOT EXISTS "COMPANYCODE" (
 	  bukrs char(4) PRIMARY KEY,
 	  butxt text
-	 );`
-		, (err, result) => {
-			if (err) throw err;
-			console.log('Initial successfull"');
-			//  client.end();
-		});
+	 );`, (err, result) => {
+		if (err) throw err;
+		console.log('Initial successfull"');
+		//  client.end();
+	});
 
 	client.query(`
 	 CREATE TABLE IF NOT EXISTS "PURC_ORG" (
 		EKORG char(4) PRIMARY KEY,
 		EKOTX text
-	 );`
-		, (err, result) => {
-			if (err) throw err;
-			console.log('Initial successfull"');
-			//  client.end();
-		});
+	 );`, (err, result) => {
+		if (err) throw err;
+		console.log('Initial successfull"');
+		//  client.end();
+	});
 
 	client.query(`
 	 CREATE TABLE IF NOT EXISTS "PLANT" (
 		WERKS char(4) PRIMARY KEY,
 		NAME1 text
-	 );`
-		, (err, result) => {
-			if (err) throw err;
-			console.log('Initial successfull"');
-			//  client.end();
-		});
+	 );`, (err, result) => {
+		if (err) throw err;
+		console.log('Initial successfull"');
+		//  client.end();
+	});
 
 	client.query(`
 	 CREATE TABLE IF NOT EXISTS "PUR_GROUP" (
 		EKGRP char(4) PRIMARY KEY,
 		EKNAM text
-	 );`
-		, (err, result) => {
-			if (err) throw err;
-			console.log('Initial successfull"');
-			//  client.end();
-		});
+	 );`, (err, result) => {
+		if (err) throw err;
+		console.log('Initial successfull"');
+		//  client.end();
+	});
 
 	client.query(`
 	 CREATE TABLE IF NOT EXISTS "FILE_STORAGE" (
 		ID SERIAL PRIMARY KEY,
 		FILE_PATH text
-	 );`
-		, (err, result) => {
-			if (err) throw err;
-			console.log('Initial successfull"');
-			//  client.end();
-		});
+	 );`, (err, result) => {
+		if (err) throw err;
+		console.log('Initial successfull"');
+		//  client.end();
+	});
 
 	client.query(`
 	 CREATE TABLE IF NOT EXISTS "PR_ATTACH" (
 		ID SERIAL PRIMARY KEY,
 		PR_NO char(10),
 		user_id char(12)
-	 );`
-		, (err, result) => {
-			if (err) throw err;
-			console.log('Initial successfull"');
-			//  client.end();
-		});
+	 );`, (err, result) => {
+		if (err) throw err;
+		console.log('Initial successfull"');
+		//  client.end();
+	});
+
+	client.query(`
+		CREATE TABLE IF NOT EXISTS "MATERIAL" (
+			MATNR char(40) PRIMARY KEY,
+			MTART text,
+			MATKL text,
+			MEINS text,
+			MAKTX text,
+			MAKTG text
+			
+		);`, (err, result) => {
+		if (err) throw err;
+		console.log('Initial successfull"');
+		//  client.end();
+	});
 
 });
 app.listen(3000, () => console.log('Server started on port 3000'));
