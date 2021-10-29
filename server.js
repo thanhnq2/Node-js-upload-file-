@@ -478,8 +478,8 @@ const {
 const client = new Client({
 	user: 'postgres',
 	host: 'localhost',
-	database: 'MASTER_DATA',
-	password: '123456',
+	database: 'prm_system',
+	password: 'Ciber@2021',
 	port: 5432,
 });
 
